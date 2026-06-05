@@ -1,0 +1,183 @@
+/* --- SYSTEM VARIABLES & CORES --- */
+:root {
+    --primary-color: #ff914d;
+    --secondary-color: #2ecc71;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom, #70a1ff, #2ed573);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- MAIN PLAY CONTAINER --- */
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 800px;
+    max-height: 600px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%237bed9f"/><circle cx="50" cy="50" r="40" fill="%232ed573" opacity="0.15"/></svg>');
+    background-color: #7bed9f;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden;
+    border: 8px solid white;
+}
+
+/* Make it full bleed without borders on smaller phones */
+@media (max-width: 800px), (max-height: 600px) {
+    #game-container {
+        border-radius: 0;
+        border: none;
+    }
+}
+
+/* --- HEADS UP DISPLAY UI --- */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.ui-box {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 15px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-weight: bold;
+    color: var(--dark-color);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: auto;
+}
+
+/* --- INTERACTIVE BUTTONS --- */
+.btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+.btn:hover {
+    background: #ff7926;
+    transform: scale(1.05);
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+#pause-btn {
+    padding: 8px 15px;
+    font-size: 1rem;
+    background: #34495e;
+}
+
+/* --- OVERLAY SCREENS --- */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(44, 62, 80, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: white;
+    text-align: center;
+    gap: 20px;
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+}
+
+.screen h1 {
+    font-size: 3rem;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    animation: bounce 2s infinite;
+}
+
+#final-score {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+#new-high-msg {
+    color: #f1c40f; 
+    font-weight: bold;
+}
+
+.hide {
+    display: none !important;
+    opacity: 0;
+}
+
+/* --- IN-GAME TARGET ELEMENT (DOGS) --- */
+.dog {
+    position: absolute;
+    font-size: 4.5rem; 
+    cursor: pointer;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: scale(0);
+    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transition: transform 0.1s ease;
+    z-index: 5;
+}
+
+.clicked {
+    animation: barksplat 0.2s ease-out forwards;
+    pointer-events: none;
+}
+
+/* --- KEYFRAME ANIMATIONS --- */
+@keyframes popIn {
+    to { transform: scale(1); }
+}
+
+@keyframes barksplat {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.4) translateY(-20px); opacity: 0; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
