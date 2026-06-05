@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tap the Dog 🐶</title>
+    <style>
+        /* --- DESIGN & THEME --- */
+        :root {
+            --primary-color: #ff914d;
+            --secondary-color: #2ecc71;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #70a1ff, #2ed573);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- GAME CONTAINER & PLAYGROUND --- */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            max-height: 600px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%237bed9f"/><circle cx="50" cy="50" r="40" fill="%232ed573" opacity="0.15"/></svg>');
+            background-color: #7bed9f;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 8px solid white;
+        }
+
+        @media (max-width: 800px), (max-height: 600px) {
+            #game-container {
+                border-radius: 0;
+                border: none;
+            }
+        }
+
+        /* --- UI HEADERS --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ui-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            pointer-events: auto;
+        }
+
+        /* --- INTERACTIVE BUTTONS --- */
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .btn:hover {
+            background: #ff7926;
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        #pause-btn {
+            padding: 8px 15px;
+            font-size: 1rem;
+            background: #34495e;
+        }
+
+        /* --- SCREENS (OVERLAYS) --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: white;
+            text-align: center;
+            gap: 20px;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+
+        .screen h1 {
+            font-size: 3rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            animation: bounce 2s infinite;
+        }
+
+        .hide {
+            display: none !important;
+            opacity: 0;
+        }
+
+        /* --- THE DOGS --- */
+        .dog {
+            position: absolute;
+            font-size: 4.5rem; /* Using emoji dogs */
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: scale(0);
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transition: transform 0.1s ease;
+            z-index: 5;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes popIn {
+            to { transform: scale(1); }
+        }
+
+        @keyframes barksplat {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.4) translateY(-20px); opacity: 0; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .clicked {
+            animation: barksplat 0.2s ease-out forwards;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <div id="ui-layer">
+            <div class="ui-box">⏱️ <span id="timer-txt">30</span>s</div>
+            <div class="ui-box">🏆 High: <span id="high-txt">0</span></div>
+            <div class="ui-box">✨ Score: <span id="score-txt">0</span></div>
+            <button id="pause-btn" class="btn hide">Pause</button>
+        </div>
+
+        <div id="start-screen" class="screen">
+            <h1>Tap the Dog 🐶</h1>
+            <p>Catch as many puppies as you can before time runs out!</p>
+            <button id="start-btn" class="btn">Start Game</button>
+        </div>
+
+        <div id="pause-screen" class="screen hide">
+            <h1>Game Paused</h1>
+            <button id="resume-btn" class="btn">Resume</button>
+        </div>
+
+        <div id="game-over-screen" class="screen hide">
+            <h1>Game Over! 🐕</h1>
+            <p style="font-size: 1.5rem;">You caught <span id="final-score" style="color:var(--primary-color); font-weight:bold;">0</span> dogs!</p>
+            <div id="new-high-msg" style="color: #f1c40f; font-weight: bold;" class="hide">🎉 NEW HIGH SCORE! 🎉</div>
+            <button id="restart-btn" class="btn">Play Again</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval = null;
+        let dogSpawnTimeout = null;
+        let isPaused = false;
+        let currentSpawnDelay = 1000; // Starts at 1 second per dog
+
+        const dogEmojis = ['🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐾'];
+
+        // --- DOM ELEMENTS ---
+        const gameContainer = document.getElementById('game-container');
+        const scoreTxt = document.getElementById('score-txt');
+        const highTxt = document.getElementById('high-txt');
+        const timerTxt = document.getElementById('timer-txt');
+        const finalScoreTxt = document.getElementById('final-score');
+        const newHighMsg = document.getElementById('new-high-msg');
+        
+        const startScreen = document.getElementById('start-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+
+        // --- AUDIO COMPONENT (Web Audio API for perfect latency) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBarkSound() {
+            // Simple synthesized cute synth-bark pop sound
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            // Quick pitch bend up and down to sound like a small puppy yip
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+            osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.16);
+        }
+
+        // --- LOCAL STORAGE HIGH SCORE ---
+        let highScore = localStorage.getItem('dog_high_score') || 0;
+        highTxt.textContent = highScore;
+
+        // --- EVENT LISTENERS ---
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        
+        pauseBtn.addEventListener('click', () => {
+            if(!isPaused) pauseGame();
+        });
+        
+        resumeBtn.addEventListener('click', () => {
+            if(isPaused) resumeGame();
+        });
+
+        // --- GAME LOGIC ---
+
+        function startGame() {
+            // Initialize/Reset State
+            score = 0;
+            timeLeft = 30;
+            currentSpawnDelay = 1000;
+            isPaused = false;
+            
+            scoreTxt.textContent = score;
+            timerTxt.textContent = timeLeft;
+            
+            // Clean up old elements
+            document.querySelectorAll('.dog').forEach(d => d.remove());
+            
+            // UI setup
+            startScreen.classList.add('hide');
+            gameOverScreen.classList.add('hide');
+            pauseScreen.classList.add('hide');
+            pauseBtn.classList.remove('hide');
+            newHighMsg.classList.add('hide');
+
+            // Resume audio context if suspended (browser security feature)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Start Loops
+            gameInterval = setInterval(updateTimer, 1000);
+            spawnLoop();
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerTxt.textContent = timeLeft;
+
+            // Make game harder as time gets lower
+            if (timeLeft <= 10) {
+                currentSpawnDelay = 450; // Super fast at the end!
+            } else if (timeLeft <= 20) {
+                currentSpawnDelay = 650; // Medium speed
+            }
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function spawnLoop() {
+            if (isPaused) return;
+
+            spawnDog();
+            // Automatically queue up next dog spawn based on evolving speed logic
+            dogSpawnTimeout = setTimeout(spawnLoop, currentSpawnDelay);
+        }
+
+        function spawnDog() {
+            const dog = document.createElement('div');
+            dog.classList.add('dog');
+            
+            // Pick a random dog emoji
+            dog.textContent = dogEmojis[Math.floor(Math.random() * dogEmojis.length)];
+
+            // Keep dogs safely inside the designated bounds of the viewport container
+            const padding = 90;
+            const maxX = gameContainer.clientWidth - padding;
+            const maxY = gameContainer.clientHeight - padding;
+            
+            // Calculate random coordinates ensuring they don't block the top UI layer
+            const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(80, Math.floor(Math.random() * maxY)); // min 80 to prevent getting behind scores
+
+            dog.style.left = `${randomX}px`;
+            dog.style.top = `${randomY}px`;
+
+            // Interaction Event
+            dog.addEventListener('touchstart', handleDogTap);
+            dog.addEventListener('mousedown', handleDogTap);
+
+            gameContainer.appendChild(dog);
+
+            // Dogs disappear automatically after 1.5 seconds if missed
+            setTimeout(() => {
+                if(dog && !dog.classList.contains('clicked') && !isPaused) {
+                    dog.remove();
+                }
+            }, 1500);
+        }
+
+        function handleDogTap(e) {
+            e.preventDefault(); // Prevents double firing on mobile touch browsers
+            
+            const clickedDog = e.currentTarget;
+            if(clickedDog.classList.contains('clicked')) return;
+
+            clickedDog.classList.add('clicked');
+            score++;
+            scoreTxt.textContent = score;
+            
+            playBarkSound();
+
+            // Remove completely after pop dynamic animation completes
+            setTimeout(() => {
+                clickedDog.remove();
+            }, 200);
+        }
+
+        function pauseGame() {
+            isPaused = true;
+            clearInterval(gameInterval);
+            clearTimeout(dogSpawnTimeout);
+            pauseScreen.classList.remove('hide');
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            pauseScreen.classList.add('hide');
+            gameInterval = setInterval(updateTimer, 1000);
+            spawnLoop();
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearTimeout(dogSpawnTimeout);
+            pauseBtn.classList.add('hide');
+            
+            // Clean remaining dogs on screen
+            document.querySelectorAll('.dog').forEach(d => d.remove());
+
+            // Handle High Score logic
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('dog_high_score', highScore);
+                highTxt.textContent = highScore;
+                newHighMsg.classList.remove('hide');
+            }
+
+            finalScoreTxt.textContent = score;
+            gameOverScreen.classList.remove('hide');
+        }
+    </script>
+</body>
+</html>
